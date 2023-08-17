@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "784215241398",
+    "project_id": "clone-8e8bd",
+    "storage_bucket": "clone-8e8bd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784215241398:android:9edf4619c16a174763ac17",
+        "android_client_info": {
+          "package_name": "amazontiga.app.amazon_clone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "784215241398-kgcil0kq3gtds7i022dk4haceldaroq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfw3aKbu5vg7qC2025fIIeJGOZAZlOUTM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "784215241398-kgcil0kq3gtds7i022dk4haceldaroq5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
