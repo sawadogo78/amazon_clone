@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Utils {
   // using media query without the context to get the screen size (height and width)
@@ -20,5 +23,12 @@ class Utils {
         content: Center(child: Text(content)),
       ),
     );
+  }
+
+  Future<Uint8List?> pickImage(ImageSource source) async {
+    ImagePicker picker = ImagePicker();
+    XFile? file = await picker.pickImage(source: source);
+
+    return file!.readAsBytes();
   }
 }

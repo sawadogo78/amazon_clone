@@ -1,4 +1,7 @@
+import 'package:amazon_clone/ui/screens/account_screen.dart';
+import 'package:amazon_clone/ui/screens/cart_screen.dart';
 import 'package:amazon_clone/ui/screens/home_screen.dart';
+import 'package:amazon_clone/ui/screens/more_screen.dart';
 import 'package:flutter/material.dart';
 
 const double kAppBarHeight = 80;
@@ -20,15 +23,9 @@ const List<String> categoriesList = [
 
 const List<Widget> screens = [
   HomeScreen(),
-  Center(
-    child: Text('Account Screen'),
-  ),
-  Center(
-    child: Text('Cart Screen'),
-  ),
-  Center(
-    child: Text('More Screen'),
-  ),
+  AccountScreen(),
+  CartScreen(),
+  MoreScreen()
 ];
 
 const List<String> categoryLogos = [
@@ -68,3 +65,11 @@ const List<String> adItemNames = [
 //Dont even attemp to scroll to the end of this manually lmao
 const String amazonLogo =
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png";
+
+const List<String> keyOfRatings = [
+  "Very bad",
+  "Poor",
+  "Average",
+  "Good",
+  "Excellent",
+];

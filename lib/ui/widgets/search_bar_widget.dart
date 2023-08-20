@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_const_constructors
 
+import 'package:amazon_clone/ui/screens/results_screen.dart';
 import 'package:amazon_clone/ui/screens/search_screen.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
 import 'package:amazon_clone/utils/constants.dart';
@@ -59,6 +60,13 @@ class SearchBarWidget extends StatelessWidget implements PreferredSize {
                 )
               ]),
               child: TextField(
+                onSubmitted: (String query) {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (context) {
+                      return ResultsScreeen(query: query);
+                    },
+                  ));
+                },
                 readOnly: isReadOnly,
                 onTap: () {
                   if (isReadOnly) {
