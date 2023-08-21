@@ -1,6 +1,8 @@
 import 'package:amazon_clone/models/product_model.dart';
+import 'package:amazon_clone/ressources/cloud_firestore_methods.dart';
 import 'package:amazon_clone/ui/widgets/banner_ad_widget.dart';
 import 'package:amazon_clone/ui/widgets/categories_horizontal_list_view_bar.dart';
+import 'package:amazon_clone/ui/widgets/loading_widget.dart';
 import 'package:amazon_clone/ui/widgets/products_showcase_list_view.dart';
 import 'package:amazon_clone/ui/widgets/search_bar_widget.dart';
 import 'package:amazon_clone/ui/widgets/simple_product_widget.dart';
@@ -19,6 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // to get the scroll position
   ScrollController scrollController = ScrollController();
   double offset = 0;
+  List<ProductModel>? discount70;
+  List<ProductModel>? discount60;
+  List<ProductModel>? discount50;
+  List<ProductModel>? discount0;
 
   @override
   void initState() {
@@ -29,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
         offset = scrollController.position.pixels;
       });
     });
+    getData();
   }
 
   @override
@@ -37,105 +44,92 @@ class _HomeScreenState extends State<HomeScreen> {
     scrollController.dispose();
   }
 
+  void getData() async {
+    List<ProductModel> temp70 =
+        await CloudFireStoreClass().getProductsFromDiscount(discount: 70);
+    List<ProductModel> temp60 =
+        await CloudFireStoreClass().getProductsFromDiscount(discount: 60);
+    List<ProductModel> temp50 =
+        await CloudFireStoreClass().getProductsFromDiscount(discount: 60);
+    List<ProductModel> temp0 =
+        await CloudFireStoreClass().getProductsFromDiscount(discount: 60);
+
+    setState(() {
+      discount70 = temp70;
+      discount60 = temp60;
+      discount50 = temp50;
+      discount0 = temp0;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: SearchBarWidget(
-          isReadOnly: true,
-          hasBackButton: false,
-        ),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              controller: scrollController,
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: kAppBarHeight / 2,
-                  ),
-                  const CategoriesHorizontalListViewBar(),
-                  const BannerAdWidget(),
-                  ProductsShowcaseListView(
-                    title: 'Upto 70 % off',
-                    children: categoryLogos
-                        .map((url) => SimpleProductWidget(
-                              productModel: ProductModel(
-                                url: url,
-                                productName: 'Robot X Space',
-                                cost: 200000.999,
-                                discount: 0,
-                                uid: 'aaa',
-                                sellerName: 'Tyga Prince of Space',
-                                sellerUid: 'dddaad',
-                                rating: 2,
-                                numOfRating: 7,
+      appBar: SearchBarWidget(
+        isReadOnly: true,
+        hasBackButton: false,
+      ),
+      body: discount70 != null &&
+              discount60 != null &&
+              discount50 != null &&
+              discount0 != null
+          ? Stack(
+              children: [
+                UserDetailsBar(
+                  offset: offset,
+                ),
+                SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: kAppBarHeight / 2,
+                      ),
+                      const CategoriesHorizontalListViewBar(),
+                      const BannerAdWidget(),
+                      ProductsShowcaseListView(
+                        title: 'Upto 70 % off',
+                        children: discount70!
+                            .map((product) =>
+                                SimpleProductWidget(productModel: product))
+                            .toList(),
+                      ),
+                      ProductsShowcaseListView(
+                        title: 'Upto 60 % off',
+                        children: discount60!
+                            .map(
+                              (product) => SimpleProductWidget(
+                                productModel: product,
                               ),
-                            ))
-                        .toList(),
-                  ),
-                  ProductsShowcaseListView(
-                    title: 'Upto 60 % off',
-                    children: categoryLogos
-                        .map((url) => SimpleProductWidget(
-                              productModel: ProductModel(
-                                url: url,
-                                productName: 'Robot X Space',
-                                cost: 200000.999,
-                                discount: 0,
-                                uid: 'aaa',
-                                sellerName: 'Tyga Prince of Space',
-                                sellerUid: 'dddaad',
-                                rating: 2,
-                                numOfRating: 7,
+                            )
+                            .toList(),
+                      ),
+                      ProductsShowcaseListView(
+                        title: 'Upto 50 % off',
+                        children: discount50!
+                            .map(
+                              (product) => SimpleProductWidget(
+                                productModel: product,
                               ),
-                            ))
-                        .toList(),
-                  ),
-                  ProductsShowcaseListView(
-                    title: 'Upto 50 % off',
-                    children: categoryLogos
-                        .map((url) => SimpleProductWidget(
-                              productModel: ProductModel(
-                                url: url,
-                                productName: 'Robot X Space',
-                                cost: 200000.999,
-                                discount: 0,
-                                uid: 'aaa',
-                                sellerName: 'Tyga Prince of Space',
-                                sellerUid: 'dddaad',
-                                rating: 2,
-                                numOfRating: 7,
+                            )
+                            .toList(),
+                      ),
+                      ProductsShowcaseListView(
+                        title: 'Explore',
+                        children: discount0!
+                            .map(
+                              (product) => SimpleProductWidget(
+                                productModel: product,
                               ),
-                            ))
-                        .toList(),
+                            )
+                            .toList(),
+                      ),
+                    ],
                   ),
-                  ProductsShowcaseListView(
-                    title: 'Explore',
-                    children: categoryLogos
-                        .map(
-                          (url) => SimpleProductWidget(
-                            productModel: ProductModel(
-                              url: url,
-                              productName: 'Robot X Space',
-                              cost: 200000.999,
-                              discount: 0,
-                              uid: 'aaa',
-                              sellerName: 'Tyga Prince of Space',
-                              sellerUid: 'dddaad',
-                              rating: 2,
-                              numOfRating: 7,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  )
-                ],
-              ),
-            ),
-            UserDetailsBar(
-              offset: offset,
+                ),
+              ],
             )
-          ],
-        ));
+          : const LoadingWidget(),
+    );
   }
 }

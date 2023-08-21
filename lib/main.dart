@@ -1,5 +1,5 @@
+import 'package:amazon_clone/layout/screen_layout.dart';
 import 'package:amazon_clone/providers/user_details_provider.dart';
-import 'package:amazon_clone/ui/screens/sell_screen.dart';
 import 'package:amazon_clone/ui/screens/sign_in_screen.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -56,8 +56,7 @@ class AmazonClone extends StatelessWidget {
                 child: CircularProgressIndicator(),
               );
             } else if (user.hasData) {
-              // return const ScreenLayout();
-              return const SellScreen();
+              return const ScreenLayout();
             } else {
               return const SignInScreen();
             }

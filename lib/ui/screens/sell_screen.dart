@@ -1,12 +1,18 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:typed_data';
 
+import 'package:amazon_clone/providers/user_details_provider.dart';
+import 'package:amazon_clone/ressources/cloud_firestore_methods.dart';
 import 'package:amazon_clone/ui/widgets/custom_main_button.dart';
 import 'package:amazon_clone/ui/widgets/loading_widget.dart';
 import 'package:amazon_clone/ui/widgets/text_field_widget.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
 import 'package:amazon_clone/utils/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class SellScreen extends StatefulWidget {
   const SellScreen({super.key});
@@ -17,10 +23,12 @@ class SellScreen extends StatefulWidget {
 
 class _SellScreenState extends State<SellScreen> {
   bool isLoading = false;
-  int selected = 4;
+  int selected = 1;
   Uint8List? image;
   TextEditingController nameController = TextEditingController();
   TextEditingController costController = TextEditingController();
+  List<int> keyofdiscount = [0, 70, 60, 50];
+  //keyofdiscount[selected-1]
 
   @override
   void dispose() {
@@ -62,24 +70,20 @@ class _SellScreenState extends State<SellScreen> {
                                         image!,
                                         height: screenSize.height / 10,
                                       ),
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: IconButton(
-                                    onPressed: () async {
-                                      Uint8List? temp = await Utils()
-                                          .pickImage(ImageSource.gallery);
+                                IconButton(
+                                  onPressed: () async {
+                                    Uint8List? temp = await Utils()
+                                        .pickImage(ImageSource.gallery);
 
-                                      if (temp != null) {
-                                        setState(() {
-                                          image = temp;
-                                        });
-                                      }
-                                    },
-                                    icon: const Icon(
-                                      Icons.file_upload,
-                                      color: Colors.white,
-                                    ),
+                                    if (temp != null) {
+                                      setState(() {
+                                        image = temp;
+                                      });
+                                    }
+                                  },
+                                  icon: const Icon(
+                                    Icons.file_upload,
+                                    color: Colors.white,
                                   ),
                                 )
                               ],
@@ -220,7 +224,33 @@ class _SellScreenState extends State<SellScreen> {
                                     color: Colors.black,
                                   ),
                                 ),
-                                onPressed: () {},
+                                onPressed: () async {
+                                  // listen to false because the user has been already authenticated, so no change
+                                  String res = await CloudFireStoreClass()
+                                      .uploadProductToDatabase(
+                                    image: image,
+                                    productName: nameController.text,
+                                    rawcost: costController.text,
+                                    discount: keyofdiscount[selected - 1],
+                                    sellerName:
+                                        Provider.of<UserDetailsProvider>(
+                                                context,
+                                                listen: false)
+                                            .userDetailsModel
+                                            .name,
+                                    sellerUid:
+                                        FirebaseAuth.instance.currentUser!.uid,
+                                  );
+                                  if (res == 'success') {
+                                    Utils().showSnackBar(
+                                        context: context,
+                                        content:
+                                            'Product successfully uploaded to Database');
+                                  } else {
+                                    Utils().showSnackBar(
+                                        context: context, content: res);
+                                  }
+                                },
                               ),
                             ),
                             Padding(
@@ -235,7 +265,9 @@ class _SellScreenState extends State<SellScreen> {
                                     color: Colors.black,
                                   ),
                                 ),
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
                               ),
                             ),
                           ],

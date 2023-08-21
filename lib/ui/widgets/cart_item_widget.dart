@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:amazon_clone/ressources/cloud_firestore_methods.dart';
 import 'package:amazon_clone/ui/screens/product_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +9,7 @@ import 'package:amazon_clone/ui/widgets/custom_square_button.dart';
 import 'package:amazon_clone/ui/widgets/product_information.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
 import 'package:amazon_clone/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class CartItemWidget extends StatelessWidget {
   final ProductModel product;
@@ -91,7 +93,23 @@ class CartItemWidget extends StatelessWidget {
                   ),
                 ),
                 CustomSquareButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    // to do that, we gonna add the same product will another uid
+                    final String newuid = const Uuid().v4();
+                    await CloudFireStoreClass().addProductToCart(
+                      productModel: ProductModel(
+                        url: product.url,
+                        productName: product.productName,
+                        cost: product.cost,
+                        discount: product.discount,
+                        uid: newuid,
+                        sellerName: product.sellerName,
+                        sellerUid: product.sellerUid,
+                        rating: product.rating,
+                        numOfRating: product.numOfRating,
+                      ),
+                    );
+                  },
                   color: backgroundColor,
                   dimension: 50,
                   child: const Icon(Icons.add),
@@ -109,7 +127,10 @@ class CartItemWidget extends StatelessWidget {
                     Row(
                       children: [
                         CustomSimpleRoundedButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            await CloudFireStoreClass()
+                                .deleateProductFromCart(uid: product.uid);
+                          },
                           text: 'Delete',
                         ),
                         const SizedBox(

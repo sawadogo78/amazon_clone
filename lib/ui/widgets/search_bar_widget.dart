@@ -44,7 +44,9 @@ class SearchBarWidget extends StatelessWidget implements PreferredSize {
         children: [
           hasBackButton
               ? IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                   icon: Icon(Icons.arrow_back),
                 )
               : Container(),

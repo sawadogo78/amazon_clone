@@ -1,5 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:amazon_clone/models/product_model.dart';
 import 'package:amazon_clone/models/reviews_model.dart';
+import 'package:amazon_clone/ressources/cloud_firestore_methods.dart';
 import 'package:amazon_clone/ui/widgets/cost_widget.dart';
 import 'package:amazon_clone/ui/widgets/custom_main_button.dart';
 import 'package:amazon_clone/ui/widgets/custom_simple_rounded_button.dart';
@@ -11,6 +14,7 @@ import 'package:amazon_clone/ui/widgets/user_details_bar.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
 import 'package:amazon_clone/utils/constants.dart';
 import 'package:amazon_clone/utils/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ProductScreen extends StatefulWidget {
@@ -22,6 +26,8 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   @override
   Widget build(BuildContext context) {
     final Size screenSize = Utils().getScreenSize(MediaQuery.of(context));
@@ -115,7 +121,16 @@ class _ProductScreenState extends State<ProductScreen> {
                                 color: Colors.black,
                               ),
                             ),
-                            onPressed: () {},
+                            onPressed: () async {
+                              // Add product to database;
+                              await CloudFireStoreClass().addProductToCart(
+                                  productModel: widget.productModel);
+
+                              Utils().showSnackBar(
+                                context: context,
+                                content: 'Successfully added to cart',
+                              );
+                            },
                           ),
                           space,
                           CustomSimpleRoundedButton(
@@ -125,7 +140,9 @@ class _ProductScreenState extends State<ProductScreen> {
                                 context: context,
                                 barrierDismissible:
                                     true, // set to false if you want to force a rating
-                                builder: (context) => const ReviewDialog(),
+                                builder: (context) => ReviewDialog(
+                                  productUid: widget.productModel.uid,
+                                ),
                               );
                             },
                             text: 'Add a review for this product',
@@ -135,16 +152,34 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
                     SizedBox(
                       height: screenSize.height,
-                      child: ListView.builder(
-                        itemCount: widget.productModel.numOfRating,
-                        itemBuilder: (context, index) {
-                          return ReviewWidget(
-                            reviewModel: ReviewModel(
-                                senderName: 'Roxane Space',
-                                description:
-                                    'Nice product, I love purchasing in Amazon because they always have good products at good price',
-                                rating: 3),
-                          );
+                      child: StreamBuilder(
+                        stream: _firestore
+                            .collection('products')
+                            .doc(widget.productModel.uid)
+                            .collection('reviews')
+                            .snapshots(),
+                        builder: (BuildContext context,
+                            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                                snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Container();
+                          } else {
+                            return ListView.builder(
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                // the document in json format
+                                final Map<String, dynamic> dataJson =
+                                    snapshot.data!.docs[index].data();
+
+                                // cretate a review model
+                                final ReviewModel reviewModel =
+                                    ReviewModel.fromJson(dataJson);
+
+                                return ReviewWidget(reviewModel: reviewModel);
+                              },
+                            );
+                          }
                         },
                       ),
                     )
