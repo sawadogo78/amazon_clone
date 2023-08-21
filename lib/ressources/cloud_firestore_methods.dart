@@ -1,6 +1,7 @@
 // Note that the ressources folder  stand for database services, so services folder as you createas usual
 import 'dart:typed_data';
 
+import 'package:amazon_clone/models/order_request_model.dart';
 import 'package:amazon_clone/models/product_model.dart';
 import 'package:amazon_clone/models/reviews_model.dart';
 import 'package:amazon_clone/models/user_details_model.dart';
@@ -113,6 +114,13 @@ class CloudFireStoreClass {
         .doc(productUid)
         .collection('reviews')
         .add(reviewModel.toMap());
+
+    // Change review
+
+    await changeReviewRating(
+      productUid: productUid,
+      review: reviewModel,
+    );
   }
 
   // Function to add cart to cart
@@ -134,7 +142,7 @@ class CloudFireStoreClass {
         .delete();
   }
 
-  Future buyAllItemsInCart() async {
+  Future buyAllItemsInCart({required UserDetailsModel userDetailsModel}) async {
     QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
         .collection('users')
         .doc(_auth.currentUser!.uid)
@@ -145,18 +153,65 @@ class CloudFireStoreClass {
       ProductModel productModel =
           ProductModel.fromJson(snapshot.docs[i].data());
       // for each product, we add it to orders after clicking on buy button
-      await addProductsToOrders(productModel: productModel);
+      await addProductsToOrders(
+        productModel: productModel,
+        userDetailsModel: userDetailsModel,
+      );
+      // After added product to orders, we deleate it from cart
+      await deleateProductFromCart(uid: productModel.uid);
     }
   }
 
-  Future addProductsToOrders({required ProductModel productModel}) async {
+  Future addProductsToOrders(
+      {required ProductModel productModel,
+      required UserDetailsModel userDetailsModel}) async {
     await _firestore
         .collection('users')
         .doc(_auth.currentUser!.uid)
         .collection('orders')
         .doc(productModel.uid)
         .set(productModel.toMap());
-// After added product to orders, we deleate it from cart
-    await deleateProductFromCart(uid: productModel.uid);
+
+    // create send order request
+    await sendOrderRequest(
+      productModel: productModel,
+      userDetailsModel: userDetailsModel,
+    );
+  }
+
+  Future sendOrderRequest({
+    required ProductModel productModel,
+    required UserDetailsModel userDetailsModel,
+  }) async {
+    OrderRequestModel orderRequestModel = OrderRequestModel(
+        orderName: productModel.productName,
+        buyerAddress: userDetailsModel.address);
+
+    // create orders request folder in the database
+
+    await _firestore
+        .collection('users')
+        .doc(productModel.sellerUid)
+        .collection('orderRequest')
+        .add(orderRequestModel.toMap());
+  }
+
+  Future changeReviewRating(
+      {required String productUid, required ReviewModel review}) async {
+    DocumentSnapshot<Map<String, dynamic>> snapshot =
+        await _firestore.collection('products').doc(productUid).get();
+
+    ProductModel productModel =
+        ProductModel.fromJson(snapshot.data() as Map<String, dynamic>);
+
+    int currentRating = productModel.rating;
+    int newRating = ((currentRating + review.rating) / 2).toInt();
+
+    // Update Rating of the product
+    await _firestore.collection('products').doc(productUid).update(
+      {
+        'rating': newRating,
+      },
+    );
   }
 }

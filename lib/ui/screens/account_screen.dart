@@ -1,3 +1,4 @@
+import 'package:amazon_clone/models/order_request_model.dart';
 import 'package:amazon_clone/models/product_model.dart';
 import 'package:amazon_clone/ui/screens/sell_screen.dart';
 import 'package:amazon_clone/ui/widgets/account_screen_app_bar.dart';
@@ -6,8 +7,9 @@ import 'package:amazon_clone/ui/widgets/introduction_widget_account_screen.dart'
 import 'package:amazon_clone/ui/widgets/products_showcase_list_view.dart';
 import 'package:amazon_clone/ui/widgets/simple_product_widget.dart';
 import 'package:amazon_clone/utils/color_themes.dart';
-import 'package:amazon_clone/utils/constants.dart';
 import 'package:amazon_clone/utils/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -40,7 +42,9 @@ class _AccountScreenState extends State<AccountScreen> {
                     'Sign Out',
                     style: TextStyle(color: Colors.black),
                   ),
-                  onPressed: () {},
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                  },
                 ),
               ),
               Padding(
@@ -61,23 +65,36 @@ class _AccountScreenState extends State<AccountScreen> {
                   },
                 ),
               ),
-              ProductsShowcaseListView(
-                title: 'Your orders',
-                children: categoryLogos
-                    .map((url) => SimpleProductWidget(
-                          productModel: ProductModel(
-                            url: url,
-                            productName: 'Robot X Space',
-                            cost: 200000.999,
-                            discount: 0,
-                            uid: 'aaa',
-                            sellerName: 'Tyga Prince of Space',
-                            sellerUid: 'dddaad',
-                            rating: 2,
-                            numOfRating: 7,
-                          ),
-                        ))
-                    .toList(),
+              FutureBuilder(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('orders')
+                    .get(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                        snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container();
+                  } else {
+                    // You can use map, instead of doing all of that
+                    List<Widget> children = [];
+                    for (int index = 0;
+                        index < snapshot.data!.docs.length;
+                        index++) {
+                      final Map<String, dynamic> dataJson =
+                          snapshot.data!.docs[index].data();
+                      final ProductModel productModel =
+                          ProductModel.fromJson(dataJson);
+                      children
+                          .add(SimpleProductWidget(productModel: productModel));
+                    }
+                    return ProductsShowcaseListView(
+                      title: 'Your orders',
+                      children: children,
+                    );
+                  }
+                },
               ),
               const Padding(
                 padding: EdgeInsets.all(15.0),
@@ -93,27 +110,51 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               Expanded(
-                  child: ListView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: ListTile(
-                      title: const Text(
-                        'Order: Black Shoes',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      subtitle: const Text('Address :  18 Rue Space'),
-                      trailing: IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.check),
-                      ),
-                    ),
-                  );
+                  child: StreamBuilder(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .collection('orderRequest')
+                    .snapshots(),
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>>
+                        snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container();
+                  } else {
+                    return ListView.builder(
+                      itemCount: snapshot.data!.docs.length,
+                      itemBuilder: (context, index) {
+                        final dataJson = snapshot.data!.docs[index].data();
+                        final OrderRequestModel orderRequestModel =
+                            OrderRequestModel.fromJson(dataJson);
+                        return ListTile(
+                          title: Text(
+                            "Order:  ${orderRequestModel.orderName}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: Text(
+                              "Address: ${orderRequestModel.buyerAddress}"),
+                          trailing: IconButton(
+                            onPressed: () async {
+                              // dealete the order request from the database par // id du document
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                                  .collection('orserRequest')
+                                  .doc(snapshot.data!.docs[index].id)
+                                  .delete();
+                            },
+                            icon: const Icon(Icons.check),
+                          ),
+                        );
+                      },
+                    );
+                  }
                 },
-              ))
+              )),
             ],
           ),
         ),

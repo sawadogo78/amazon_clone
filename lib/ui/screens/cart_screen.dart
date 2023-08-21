@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:amazon_clone/models/product_model.dart';
+import 'package:amazon_clone/providers/user_details_provider.dart';
 import 'package:amazon_clone/ressources/cloud_firestore_methods.dart';
 import 'package:amazon_clone/ui/widgets/cart_item_widget.dart';
 import 'package:amazon_clone/ui/widgets/custom_main_button.dart';
@@ -11,6 +12,7 @@ import 'package:amazon_clone/utils/utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -65,7 +67,12 @@ class _CartScreenState extends State<CartScreen> {
                                 style: const TextStyle(color: Colors.black),
                               ),
                               onPressed: () async {
-                                await CloudFireStoreClass().buyAllItemsInCart();
+                                await CloudFireStoreClass().buyAllItemsInCart(
+                                    userDetailsModel:
+                                        Provider.of<UserDetailsProvider>(
+                                                context,
+                                                listen: false)
+                                            .userDetailsModel);
                                 Utils().showSnackBar(
                                     context: context,
                                     content:

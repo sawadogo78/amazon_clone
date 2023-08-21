@@ -2,8 +2,8 @@
 import 'package:amazon_clone/models/product_model.dart';
 import 'package:amazon_clone/ui/widgets/results_widget.dart';
 import 'package:amazon_clone/ui/widgets/search_bar_widget.dart';
-import 'package:amazon_clone/utils/constants.dart';
 import 'package:amazon_clone/utils/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ResultsScreeen extends StatelessWidget {
@@ -47,33 +47,38 @@ class ResultsScreeen extends StatelessWidget {
               ),
             ),
           ),
+          // get query search from database
           Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 2 / 3,
-              ),
-              itemBuilder: (context, index) {
-                return SizedBox(
-                  width: screenSize.width / 3,
-                  child: FittedBox(
-                    child: ResultsWidget(
-                      product: ProductModel(
-                        url: amazonLogoUrl,
-                        productName: 'Robot X Space',
-                        cost: 20000.999,
-                        discount: 0,
-                        uid: 'ddfddfzd',
-                        sellerName: 'Tyga Prince of Space',
-                        sellerUid: 'ddfff',
-                        rating: 3,
-                        numOfRating: 3,
-                      ),
-                    ),
-                  ),
-                );
+            child: FutureBuilder(
+              future: FirebaseFirestore.instance
+                  .collection('products')
+                  .where('productName', isEqualTo: query)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container();
+                } else {
+                  return GridView.builder(
+                    itemCount: snapshot.data!.docs.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 20,
+                            crossAxisSpacing: 20,
+                            childAspectRatio: 2 / 3),
+                    itemBuilder: (context, index) {
+                      final dataJson = snapshot.data!.docs[index].data();
+                      final ProductModel product =
+                          ProductModel.fromJson(dataJson);
+                      return SizedBox(
+                        width: screenSize.width / 3,
+                        child: FittedBox(
+                          child: ResultsWidget(product: product),
+                        ),
+                      );
+                    },
+                  );
+                }
               },
             ),
           )
